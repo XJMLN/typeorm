@@ -952,7 +952,7 @@ export class PostgresQueryRunner
         const enumColumns = newTable.columns.filter(
             (column) => column.type === "enum" || column.type === "simple-enum",
         )
-        for (let column of enumColumns) {
+        for (const column of enumColumns) {
             // skip renaming for user-defined enum name
             if (column.enumName) continue
 
@@ -1093,28 +1093,25 @@ export class PostgresQueryRunner
 
         // create unique constraint
         if (column.isUnique) {
-            const uniqueConstraint = new TableUnique({
-                name: this.connection.namingStrategy.uniqueConstraintName(
-                    table,
-                    [column.name],
-                ),
-                columnNames: [column.name],
+            const uniqueConstraints =
+                column.uniqueKeyMetadatas
+                    ?.filter(
+                        (metadata) =>
+                            Object.keys(
+                                metadata.columnNamesWithOrderingMap,
+                            )[0] === column.name,
+                    )
+                    .map(TableUnique.create) || []
+
+            uniqueConstraints.forEach((constraint) => {
+                upQueries.push(
+                    this.createUniqueConstraintSql(table, constraint),
+                )
+                downQueries.push(
+                    this.dropUniqueConstraintSql(table, constraint),
+                )
+                clonedTable.uniques.push(constraint)
             })
-            clonedTable.uniques.push(uniqueConstraint)
-            upQueries.push(
-                new Query(
-                    `ALTER TABLE ${this.escapePath(table)} ADD CONSTRAINT "${
-                        uniqueConstraint.name
-                    }" UNIQUE ("${column.name}")`,
-                ),
-            )
-            downQueries.push(
-                new Query(
-                    `ALTER TABLE ${this.escapePath(table)} DROP CONSTRAINT "${
-                        uniqueConstraint.name
-                    }"`,
-                ),
-            )
         }
 
         if (column.generatedType === "STORED" && column.asExpression) {
@@ -1858,31 +1855,26 @@ export class PostgresQueryRunner
             }
 
             if (newColumn.isUnique !== oldColumn.isUnique) {
-                if (newColumn.isUnique === true) {
-                    const uniqueConstraint = new TableUnique({
-                        name: this.connection.namingStrategy.uniqueConstraintName(
-                            table,
-                            [newColumn.name],
-                        ),
-                        columnNames: [newColumn.name],
+                if (newColumn.isUnique) {
+                    const uniqueConstraints =
+                        newColumn.uniqueKeyMetadatas
+                            ?.filter(
+                                (metadata) =>
+                                    Object.keys(
+                                        metadata.columnNamesWithOrderingMap,
+                                    )[0] === newColumn.name,
+                            )
+                            .map(TableUnique.create) || []
+
+                    uniqueConstraints.forEach((constraint) => {
+                        upQueries.push(
+                            this.createUniqueConstraintSql(table, constraint),
+                        )
+                        downQueries.push(
+                            this.dropUniqueConstraintSql(table, constraint),
+                        )
+                        clonedTable.uniques.push(constraint)
                     })
-                    clonedTable.uniques.push(uniqueConstraint)
-                    upQueries.push(
-                        new Query(
-                            `ALTER TABLE ${this.escapePath(
-                                table,
-                            )} ADD CONSTRAINT "${
-                                uniqueConstraint.name
-                            }" UNIQUE ("${newColumn.name}")`,
-                        ),
-                    )
-                    downQueries.push(
-                        new Query(
-                            `ALTER TABLE ${this.escapePath(
-                                table,
-                            )} DROP CONSTRAINT "${uniqueConstraint.name}"`,
-                        ),
-                    )
                 } else {
                     const uniqueConstraint = clonedTable.uniques.find(
                         (unique) => {

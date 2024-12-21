@@ -1,3 +1,5 @@
+import { UniqueMetadata } from "../../metadata/UniqueMetadata"
+
 /**
  * Table's column options.
  */
@@ -150,4 +152,9 @@ export interface TableColumnOptions {
      * SRID (Spatial Reference ID (EPSG code))
      */
     srid?: number
+
+    /**
+     * If this column is unique then this holds metadata for it.
+     */
+    uniqueKeyMetadatas?: UniqueMetadata[]
 }

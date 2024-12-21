@@ -35,6 +35,7 @@ export class TableUtils {
                 : columnMetadata.enum,
             enumName: columnMetadata.enumName,
             primaryKeyConstraintName: columnMetadata.primaryKeyConstraintName,
+            uniqueKeyMetadatas: columnMetadata.entityMetadata.ownUniques,
             spatialFeatureType: columnMetadata.spatialFeatureType,
             srid: columnMetadata.srid,
         }

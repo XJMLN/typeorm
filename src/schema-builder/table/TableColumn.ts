@@ -1,4 +1,5 @@
 import { TableColumnOptions } from "../options/TableColumnOptions"
+import { UniqueMetadata } from "../../metadata/UniqueMetadata"
 
 /**
  * Table's columns in the database represented in this class.
@@ -151,6 +152,11 @@ export class TableColumn {
      */
     srid?: number
 
+    /**
+     * If this column is unique then this holds metadata for it.
+     */
+    uniqueKeyMetadatas?: UniqueMetadata[]
+
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
@@ -180,6 +186,7 @@ export class TableColumn {
             this.enum = options.enum
             this.enumName = options.enumName
             this.primaryKeyConstraintName = options.primaryKeyConstraintName
+            this.uniqueKeyMetadatas = options.uniqueKeyMetadatas
             this.asExpression = options.asExpression
             this.generatedType = options.generatedType
             this.spatialFeatureType = options.spatialFeatureType
@@ -209,6 +216,7 @@ export class TableColumn {
             enum: this.enum,
             enumName: this.enumName,
             primaryKeyConstraintName: this.primaryKeyConstraintName,
+            uniqueKeyMetadatas: this.uniqueKeyMetadatas,
             asExpression: this.asExpression,
             generatedType: this.generatedType,
             default: this.default,
